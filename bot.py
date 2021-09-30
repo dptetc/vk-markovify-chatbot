@@ -67,10 +67,14 @@ async def talk(message: Message) -> None:
         while "\n\n" in text:
             text = text.replace("\n\n", "\n")
 
-        # Преобразование [id1|@durov] в @id1
+        # Удаление @ для избежания аллов и тд
+        while "@" in text:
+            text = text.replace("@", "")
+
+        # Преобразование [id1|@durov] в id1
         user_ids = tuple(set(pattern.findall(text)))
         for user_id in user_ids:
-            text = re.sub(rf"\[id{user_id}\|.*?]", f"@id{user_id}", text)
+            text = re.sub(rf"\[id{user_id}\|.*?]", f"id{user_id}", text)
 
         # Создание папки db, если не создана
         try:
@@ -79,14 +83,14 @@ async def talk(message: Message) -> None:
             pass
 
         # Запись нового сообщения в историю беседы
-        async with open(f"db/{peer_id}.txt", "a") as f:
+        async with open(f"db/{peer_id}.txt", "a", encoding="utf-8") as f:
             await f.write(f"\n{text}")
 
     if randint(1, 100) > RESPONSE_CHANCE:
         return
 
     # Чтение истории беседы
-    async with open(f"db/{peer_id}.txt") as f:
+    async with open(f"db/{peer_id}.txt", encoding="utf-8") as f:
         db = await f.read()
     db = db.strip().lower()
 
